@@ -1,0 +1,123 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <title>Doctor Team</title>
+    <style>
+        body {
+            font-family: Arial, sans-serif;
+            background-color: #f4f6f8;
+            text-align: center;
+            padding: 40px;
+        }
+
+        h1 {
+            margin-bottom: 5px;
+        }
+
+        h2 {
+            margin-top: 0;
+            color: #555;
+        }
+
+        .form-box {
+            background: white;
+            max-width: 400px;
+            margin: 30px auto;
+            padding: 20px;
+            border-radius: 8px;
+            box-shadow: 0 0 10px rgba(0,0,0,0.1);
+        }
+
+        input, textarea {
+            width: 100%;
+            padding: 10px;
+            margin-top: 10px;
+            box-sizing: border-box;
+        }
+
+        button {
+            margin-top: 15px;
+            padding: 10px 20px;
+            cursor: pointer;
+        }
+
+        .result {
+            margin-top: 40px;
+        }
+
+        .card {
+            background: white;
+            max-width: 400px;
+            margin: 10px auto;
+            padding: 15px;
+            border-radius: 6px;
+            box-shadow: 0 0 5px rgba(0,0,0,0.1);
+            text-align: left;
+        }
+    </style>
+</head>
+<body>
+
+    <h1>Doctor Team</h1>
+    <h2>Apply to join us!</h2>
+
+    <div class="form-box">
+        <input id="name" placeholder="Your Name">
+        <input id="sign" placeholder="Your Sign">
+        <textarea id="certificate" placeholder="Your Draft Medical Certificate"></textarea>
+        <button onclick="apply()">Apply</button>
+    </div>
+
+    <div class="result">
+        <h3>Applications</h3>
+        <div id="applications"></div>
+    </div>
+
+    <script>
+        // 读取已保存的数据
+        let data = JSON.parse(localStorage.getItem("applications")) || [];
+
+        function render() {
+            const container = document.getElementById("applications");
+            container.innerHTML = "";
+
+            data.forEach(item => {
+                const div = document.createElement("div");
+                div.className = "card";
+                div.innerHTML = `
+                    <strong>Name:</strong> ${item.name}<br>
+                    <strong>Sign:</strong> ${item.sign}<br>
+                    <strong>Certificate:</strong><br>${item.certificate}
+                `;
+                container.appendChild(div);
+            });
+        }
+
+        function apply() {
+            const name = document.getElementById("name").value;
+            const sign = document.getElementById("sign").value;
+            const certificate = document.getElementById("certificate").value;
+
+            if (!name || !sign || !certificate) {
+                alert("Please fill in all fields.");
+                return;
+            }
+
+            data.push({ name, sign, certificate });
+            localStorage.setItem("applications", JSON.stringify(data));
+
+            // 清空输入框
+            document.getElementById("name").value = "";
+            document.getElementById("sign").value = "";
+            document.getElementById("certificate").value = "";
+
+            render();
+        }
+
+        // 页面一打开就渲染
+        render();
+    </script>
+
+</body>
+</html>
