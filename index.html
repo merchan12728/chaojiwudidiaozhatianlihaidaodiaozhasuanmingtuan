@@ -2,89 +2,209 @@
 <html lang="zh-CN">
 <head>
 <meta charset="UTF-8">
-<title>Doctor Team</title>
+<title>Doctor Team Application</title>
 <style>
-body { font-family: sans-serif; text-align: center; padding: 20px; }
-.form-container { margin: 20px auto; max-width: 400px; padding: 20px; border: 1px solid #ccc; border-radius: 10px; }
-input { display: block; width: 100%; margin: 10px 0; padding: 8px; box-sizing: border-box; }
-button { padding: 10px 20px; cursor: pointer; background: #007bff; color: white; border: none; border-radius: 5px; }
-#display-area { margin-top: 30px; border-top: 2px solid #eee; padding-top: 20px; }
-.record { background: #f9f9f9; border: 1px solid #ddd; margin: 10px 0; padding: 10px; text-align: left; }
+body {
+  font-family: "Segoe UI", Tahoma, Geneva, Verdana, sans-serif;
+  background: #f5f7fa;
+  margin: 0;
+  padding: 20px;
+  color: #333;
+}
+h1 {
+  text-align: center;
+  color: #007bff;
+}
+.form-container {
+  max-width: 500px;
+  margin: 20px auto;
+  padding: 20px;
+  background: white;
+  border-radius: 10px;
+  box-shadow: 0 4px 8px rgba(0,0,0,0.1);
+}
+.form-container label {
+  display: block;
+  margin-top: 10px;
+  font-weight: bold;
+}
+.form-container input {
+  width: 100%;
+  padding: 8px;
+  margin-top: 5px;
+  box-sizing: border-box;
+  border-radius: 5px;
+  border: 1px solid #ccc;
+}
+button {
+  margin-top: 15px;
+  padding: 10px 20px;
+  background: #007bff;
+  color: white;
+  border: none;
+  border-radius: 5px;
+  cursor: pointer;
+}
+button:hover {
+  background: #0056b3;
+}
+.table-container {
+  max-width: 800px;
+  margin: 40px auto;
+  background: white;
+  border-radius: 10px;
+  padding: 20px;
+  box-shadow: 0 4px 8px rgba(0,0,0,0.1);
+}
+table {
+  width: 100%;
+  border-collapse: collapse;
+}
+table th, table td {
+  border: 1px solid #ddd;
+  padding: 10px;
+  text-align: left;
+}
+table th {
+  background: #007bff;
+  color: white;
+}
+.delete-btn {
+  background: #dc3545;
+  color: white;
+  border: none;
+  padding: 5px 10px;
+  border-radius: 5px;
+  cursor: pointer;
+}
+.delete-btn:hover {
+  background: #a71d2a;
+}
 </style>
 </head>
 <body>
+
 <h1>Doctor Team</h1>
-<h2>Apply To Join Us</h2>
-<p>One Team One Dream</p>
 <div class="form-container">
-<label>Name:</label>
-<input type="text" id="nameInput" placeholder="输入姓名">
-<label>Sign:</label>
-<input type="text" id="signInput" placeholder="输入签名">
-<label>Draft Certificate:</label>
-<input type="text" id="certInput" placeholder="输入证书内容">
-<button id="submitBtn">Submit</button>
+  <h2>Apply To Join Us</h2>
+  <label for="nameInput">Name:</label>
+  <input type="text" id="nameInput" placeholder="输入姓名">
+  <label for="signInput">Sign:</label>
+  <input type="text" id="signInput" placeholder="输入签名">
+  <label for="certInput">Draft Certificate:</label>
+  <input type="text" id="certInput" placeholder="输入证书内容">
+  <button id="submitBtn">Submit</button>
 </div>
-<div id="display-area">
-<h3>Doctor (已加入成员)</h3>
-<div id="recordsList">正在加载实时数据...</div>
+
+<div class="table-container">
+  <h2>已加入成员</h2>
+  <table>
+    <thead>
+      <tr>
+        <th>申请时间</th>
+        <th>姓名</th>
+        <th>签名</th>
+        <th>证书</th>
+        <th>操作</th>
+      </tr>
+    </thead>
+    <tbody id="recordsList">
+      <tr><td colspan="5">正在加载实时数据...</td></tr>
+    </tbody>
+  </table>
 </div>
-<!-- 引入 Firebase SDK (使用模块化版本，已修复链接) -->
+
+<!-- Firebase SDK -->
 <script type="module">
-import { initializeApp } from "https://www.gstatic.com";
-import { getDatabase, ref, push, onValue } from "https://www.gstatic.com";
+import { initializeApp } from "https://www.gstatic.com/firebasejs/9.23.0/firebase-app.js";
+import { getDatabase, ref, push, onValue, remove } from "https://www.gstatic.com/firebasejs/9.23.0/firebase-database.js";
+
+// ---------- 配置 Firebase ----------
 const firebaseConfig = {
-apiKey: "AIzaSyDzf_IRIDZl2_hukHAEPeLCnTcDhXuNzI4",
-authDomain: "test-c8f5b.firebaseapp.com",
-databaseURL: "https://test-c8f5b-default-rtdb.asia-southeast1.firebasedatabase.app",
-projectId: "test-c8f5b",
-storageBucket: "test-c8f5b.firebasestorage.app",
-messagingSenderId: "383603417544",
-appId: "1:383603417544:web:7d351f659af0ecf046e0fd",
-measurementId: "G-QNE09HSHJJ"
+  apiKey: "AIzaSyDzf_IRIDZl2_hukHAEPeLCnTcDhXuNzI4",
+  authDomain: "test-c8f5b.firebaseapp.com",
+  databaseURL: "https://test-c8f5b-default-rtdb.asia-southeast1.firebasedatabase.app",
+  projectId: "test-c8f5b",
+  storageBucket: "test-c8f5b.appspot.com",
+  messagingSenderId: "383603417544",
+  appId: "1:383603417544:web:7d351f659af0ecf046e0fd",
+  measurementId: "G-QNE09HSHJJ"
 };
-// 初始化 Firebase
+
 const app = initializeApp(firebaseConfig);
 const db = getDatabase(app);
 const doctorsRef = ref(db, 'doctors');
-// 提交数据
+
+// ---------- 是否为管理员（控制删除按钮显示） ----------
+const isAdmin = true; // 改为 false 普通访客不可删除
+
+// ---------- 提交表单 ----------
 document.getElementById('submitBtn').addEventListener('click', () => {
-const name = document.getElementById('nameInput').value;
-const sign = document.getElementById('signInput').value;
-const cert = document.getElementById('certInput').value;
-if (name && sign && cert) {
-push(doctorsRef, {
-name: name,
-sign: sign,
-cert: cert,
-timestamp: Date.now()
-}).then(() => {
-alert("申请成功！");
-document.getElementById('nameInput').value = '';
-document.getElementById('signInput').value = '';
-document.getElementById('certInput').value = '';
+  const name = document.getElementById('nameInput').value.trim();
+  const sign = document.getElementById('signInput').value.trim();
+  const cert = document.getElementById('certInput').value.trim();
+
+  if (!name || !sign || !cert) {
+    alert("请填写所有字段");
+    return;
+  }
+
+  push(doctorsRef, {
+    name, sign, cert, timestamp: Date.now()
+  }).then(() => {
+    alert("申请成功！");
+    document.getElementById('nameInput').value = '';
+    document.getElementById('signInput').value = '';
+    document.getElementById('certInput').value = '';
+  }).catch(err => {
+    alert("提交失败: " + err.message);
+  });
 });
-} else {
-alert("请填写所有字段");
-}
-});
-// 实时监听并显示数据 (刷新不消失，且多设备同步)
+
+// ---------- 实时监听并显示表格 ----------
 onValue(doctorsRef, (snapshot) => {
-const recordsList = document.getElementById('recordsList');
-recordsList.innerHTML = '';
-const data = snapshot.val();
-if (data) {
-// 将数据显示为最新的在最上面
-Object.values(data).reverse().forEach(item => {
-const div = document.createElement('div');
-div.className = 'record';
-div.innerHTML = &lt;strong&gt;Name:&lt;/strong&gt; ${item.name}&lt;br&gt; &lt;strong&gt;Sign:&lt;/strong&gt; ${item.sign}&lt;br&gt; &lt;strong&gt;Certificate:&lt;/strong&gt; ${item.cert};
-recordsList.appendChild(div);
-});
-} else {
-recordsList.innerHTML = '暂无记录';
-}
+  const recordsList = document.getElementById('recordsList');
+  recordsList.innerHTML = '';
+
+  const data = snapshot.val();
+  if (!data) {
+    recordsList.innerHTML = '<tr><td colspan="5">暂无记录</td></tr>';
+    return;
+  }
+
+  // 将对象转换为数组并按时间倒序
+  const items = Object.entries(data).sort((a, b) => b[1].timestamp - a[1].timestamp);
+
+  items.forEach(([key, item]) => {
+    const tr = document.createElement('tr');
+
+    const date = new Date(item.timestamp);
+    const formattedTime = date.toLocaleString();
+
+    tr.innerHTML = `
+      <td>${formattedTime}</td>
+      <td>${item.name}</td>
+      <td>${item.sign}</td>
+      <td>${item.cert}</td>
+      <td>${isAdmin ? `<button class="delete-btn" data-key="${key}">删除</button>` : ''}</td>
+    `;
+
+    recordsList.appendChild(tr);
+  });
+
+  // 删除功能
+  if (isAdmin) {
+    document.querySelectorAll('.delete-btn').forEach(btn => {
+      btn.addEventListener('click', () => {
+        const key = btn.dataset.key;
+        if (confirm("确定要删除这条记录吗？")) {
+          remove(ref(db, 'doctors/' + key));
+        }
+      });
+    });
+  }
 });
 </script>
+
 </body>
 </html>
