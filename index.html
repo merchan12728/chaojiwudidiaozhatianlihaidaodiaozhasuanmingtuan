@@ -143,7 +143,7 @@ import { initializeApp } from "https://www.gstatic.com/firebasejs/9.23.0/firebas
 import { getDatabase, ref, push, onValue, remove } from "https://www.gstatic.com/firebasejs/9.23.0/firebase-database.js";
 
 /* 🔐 管理员密码（你自己改） */
-const ADMIN_PASSWORD = "doctor123";
+const ADMIN_PASSWORD = "bosjie12728";
 
 /* Firebase config */
 const firebaseConfig = {
@@ -166,7 +166,7 @@ let isAdmin = false;
 /* Admin login */
 document.getElementById("adminLoginBtn").onclick = () => {
   const pwd = document.getElementById("adminPassword").value;
-  if (pwd === bosjie12728) {
+  if (pwd === ADMIN_PASSWORD) {
     isAdmin = true;
     document.getElementById("adminStatus").innerText = "✅ Admin mode enabled";
   } else {
@@ -237,3 +237,4 @@ onValue(doctorsRef, snapshot => {
 
 </body>
 </html>
+
