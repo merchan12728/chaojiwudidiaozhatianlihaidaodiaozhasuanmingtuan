@@ -2,124 +2,150 @@
 <html lang="zh-CN">
 <head>
 <meta charset="UTF-8">
-<title>Doctor Team Application</title>
+<title>Doctor Team Admin</title>
+
 <style>
 body {
-  font-family: "Segoe UI", Tahoma, Geneva, Verdana, sans-serif;
-  background: #f5f7fa;
-  margin: 0;
+  font-family: "Segoe UI", sans-serif;
+  background: #f4f7fb;
   padding: 20px;
-  color: #333;
 }
+
 h1 {
   text-align: center;
-  color: #007bff;
+  color: #0d6efd;
 }
-.form-container {
+
+.card {
+  background: white;
   max-width: 500px;
   margin: 20px auto;
   padding: 20px;
-  background: white;
   border-radius: 10px;
-  box-shadow: 0 4px 8px rgba(0,0,0,0.1);
+  box-shadow: 0 4px 10px rgba(0,0,0,0.1);
 }
-.form-container label {
+
+label {
+  font-weight: bold;
   display: block;
   margin-top: 10px;
-  font-weight: bold;
 }
-.form-container input {
+
+input {
   width: 100%;
   padding: 8px;
   margin-top: 5px;
-  box-sizing: border-box;
   border-radius: 5px;
   border: 1px solid #ccc;
 }
+
 button {
   margin-top: 15px;
-  padding: 10px 20px;
-  background: #007bff;
+  padding: 10px;
+  background: #0d6efd;
   color: white;
   border: none;
   border-radius: 5px;
   cursor: pointer;
 }
+
 button:hover {
-  background: #0056b3;
+  background: #084298;
 }
-.table-container {
-  max-width: 800px;
-  margin: 40px auto;
-  background: white;
-  border-radius: 10px;
-  padding: 20px;
-  box-shadow: 0 4px 8px rgba(0,0,0,0.1);
-}
+
 table {
   width: 100%;
   border-collapse: collapse;
+  margin-top: 20px;
 }
-table th, table td {
+
+th, td {
   border: 1px solid #ddd;
   padding: 10px;
-  text-align: left;
 }
-table th {
-  background: #007bff;
+
+th {
+  background: #0d6efd;
   color: white;
 }
+
 .delete-btn {
   background: #dc3545;
-  color: white;
   border: none;
+  color: white;
   padding: 5px 10px;
   border-radius: 5px;
   cursor: pointer;
 }
+
 .delete-btn:hover {
   background: #a71d2a;
 }
+
+.admin-box {
+  max-width: 400px;
+  margin: 30px auto;
+  text-align: center;
+}
 </style>
 </head>
+
 <body>
 
 <h1>Doctor Team</h1>
-<div class="form-container">
+
+<!-- 申请表 -->
+<div class="card">
   <h2>Apply To Join Us</h2>
-  <label for="nameInput">Name:</label>
-  <input type="text" id="nameInput" placeholder="输入姓名">
-  <label for="signInput">Sign:</label>
-  <input type="text" id="signInput" placeholder="输入签名">
-  <label for="certInput">Draft Certificate:</label>
-  <input type="text" id="certInput" placeholder="输入证书内容">
+
+  <label>Name</label>
+  <input id="nameInput">
+
+  <label>Sign</label>
+  <input id="signInput">
+
+  <label>Certificate</label>
+  <input id="certInput">
+
   <button id="submitBtn">Submit</button>
 </div>
 
-<div class="table-container">
-  <h2>已加入成员</h2>
+<!-- 管理员登录 -->
+<div class="admin-box">
+  <h3>Admin Login</h3>
+  <input type="password" id="adminPassword" placeholder="Enter admin password">
+  <button id="adminLoginBtn">Login as Admin</button>
+  <p id="adminStatus"></p>
+</div>
+
+<!-- 数据表 -->
+<div class="card">
+  <h2>Doctor List</h2>
   <table>
     <thead>
       <tr>
-        <th>申请时间</th>
-        <th>姓名</th>
-        <th>签名</th>
-        <th>证书</th>
-        <th>操作</th>
+        <th>Time</th>
+        <th>Name</th>
+        <th>Sign</th>
+        <th>Certificate</th>
+        <th>Action</th>
       </tr>
     </thead>
     <tbody id="recordsList">
-      <tr><td colspan="5">正在加载实时数据...</td></tr>
+      <tr><td colspan="5">Loading...</td></tr>
     </tbody>
   </table>
 </div>
 
-<!-- Firebase SDK -->
+<!-- Firebase -->
 <script type="module">
 import { initializeApp } from "https://www.gstatic.com/firebasejs/9.23.0/firebase-app.js";
 import { getDatabase, ref, push, onValue, remove } from "https://www.gstatic.com/firebasejs/9.23.0/firebase-database.js";
 
-// ---------- 配置 Firebase ----------
+/* 🔐 管理员密码（你自己改） */
+const ADMIN_PASSWORD = "doctor123";
+
+/* Firebase config */
 const firebaseConfig = {
   apiKey: "AIzaSyDzf_IRIDZl2_hukHAEPeLCnTcDhXuNzI4",
   authDomain: "test-c8f5b.firebaseapp.com",
@@ -127,22 +153,32 @@ const firebaseConfig = {
   projectId: "test-c8f5b",
   storageBucket: "test-c8f5b.appspot.com",
   messagingSenderId: "383603417544",
-  appId: "1:383603417544:web:7d351f659af0ecf046e0fd",
-  measurementId: "G-QNE09HSHJJ"
+  appId: "1:383603417544:web:7d351f659af0ecf046e0fd"
 };
 
 const app = initializeApp(firebaseConfig);
 const db = getDatabase(app);
-const doctorsRef = ref(db, 'doctors');
+const doctorsRef = ref(db, "doctors");
 
-// ---------- 是否为管理员（控制删除按钮显示） ----------
-const isAdmin = true; // 改为 false 普通访客不可删除
+/* 管理员状态 */
+let isAdmin = false;
 
-// ---------- 提交表单 ----------
-document.getElementById('submitBtn').addEventListener('click', () => {
-  const name = document.getElementById('nameInput').value.trim();
-  const sign = document.getElementById('signInput').value.trim();
-  const cert = document.getElementById('certInput').value.trim();
+/* Admin login */
+document.getElementById("adminLoginBtn").onclick = () => {
+  const pwd = document.getElementById("adminPassword").value;
+  if (pwd === bosjie12728) {
+    isAdmin = true;
+    document.getElementById("adminStatus").innerText = "✅ Admin mode enabled";
+  } else {
+    alert("Wrong password");
+  }
+};
+
+/* 提交申请 */
+document.getElementById("submitBtn").onclick = () => {
+  const name = nameInput.value.trim();
+  const sign = signInput.value.trim();
+  const cert = certInput.value.trim();
 
   if (!name || !sign || !cert) {
     alert("请填写所有字段");
@@ -150,57 +186,50 @@ document.getElementById('submitBtn').addEventListener('click', () => {
   }
 
   push(doctorsRef, {
-    name, sign, cert, timestamp: Date.now()
-  }).then(() => {
-    alert("申请成功！");
-    document.getElementById('nameInput').value = '';
-    document.getElementById('signInput').value = '';
-    document.getElementById('certInput').value = '';
-  }).catch(err => {
-    alert("提交失败: " + err.message);
+    name,
+    sign,
+    cert,
+    timestamp: Date.now()
   });
-});
 
-// ---------- 实时监听并显示表格 ----------
-onValue(doctorsRef, (snapshot) => {
-  const recordsList = document.getElementById('recordsList');
-  recordsList.innerHTML = '';
+  nameInput.value = "";
+  signInput.value = "";
+  certInput.value = "";
+};
+
+/* 实时显示数据 */
+onValue(doctorsRef, snapshot => {
+  recordsList.innerHTML = "";
 
   const data = snapshot.val();
   if (!data) {
-    recordsList.innerHTML = '<tr><td colspan="5">暂无记录</td></tr>';
+    recordsList.innerHTML = `<tr><td colspan="5">No records</td></tr>`;
     return;
   }
 
-  // 将对象转换为数组并按时间倒序
-  const items = Object.entries(data).sort((a, b) => b[1].timestamp - a[1].timestamp);
+  Object.entries(data)
+    .sort((a, b) => b[1].timestamp - a[1].timestamp)
+    .forEach(([key, item]) => {
+      const tr = document.createElement("tr");
+      tr.innerHTML = `
+        <td>${new Date(item.timestamp).toLocaleString()}</td>
+        <td>${item.name}</td>
+        <td>${item.sign}</td>
+        <td>${item.cert}</td>
+        <td>
+          ${isAdmin ? `<button class="delete-btn" data-key="${key}">Delete</button>` : ""}
+        </td>
+      `;
+      recordsList.appendChild(tr);
+    });
 
-  items.forEach(([key, item]) => {
-    const tr = document.createElement('tr');
-
-    const date = new Date(item.timestamp);
-    const formattedTime = date.toLocaleString();
-
-    tr.innerHTML = `
-      <td>${formattedTime}</td>
-      <td>${item.name}</td>
-      <td>${item.sign}</td>
-      <td>${item.cert}</td>
-      <td>${isAdmin ? `<button class="delete-btn" data-key="${key}">删除</button>` : ''}</td>
-    `;
-
-    recordsList.appendChild(tr);
-  });
-
-  // 删除功能
   if (isAdmin) {
-    document.querySelectorAll('.delete-btn').forEach(btn => {
-      btn.addEventListener('click', () => {
-        const key = btn.dataset.key;
-        if (confirm("确定要删除这条记录吗？")) {
-          remove(ref(db, 'doctors/' + key));
+    document.querySelectorAll(".delete-btn").forEach(btn => {
+      btn.onclick = () => {
+        if (confirm("确定删除？")) {
+          remove(ref(db, "doctors/" + btn.dataset.key));
         }
-      });
+      };
     });
   }
 });
