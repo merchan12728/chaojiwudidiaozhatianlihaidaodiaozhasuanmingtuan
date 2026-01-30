@@ -1,0 +1,90 @@
+<!DOCTYPE html>
+<html lang="zh-CN">
+<head>
+<meta charset="UTF-8">
+<title>Doctor Team</title>
+<style>
+body { font-family: sans-serif; text-align: center; padding: 20px; }
+.form-container { margin: 20px auto; max-width: 400px; padding: 20px; border: 1px solid #ccc; border-radius: 10px; }
+input { display: block; width: 100%; margin: 10px 0; padding: 8px; box-sizing: border-box; }
+button { padding: 10px 20px; cursor: pointer; background: #007bff; color: white; border: none; border-radius: 5px; }
+#display-area { margin-top: 30px; border-top: 2px solid #eee; padding-top: 20px; }
+.record { background: #f9f9f9; border: 1px solid #ddd; margin: 10px 0; padding: 10px; text-align: left; }
+</style>
+</head>
+<body>
+<h1>Doctor Team</h1>
+<h2>Apply To Join Us</h2>
+<p>One Team One Dream</p>
+<div class="form-container">
+<label>Name:</label>
+<input type="text" id="nameInput" placeholder="输入姓名">
+<label>Sign:</label>
+<input type="text" id="signInput" placeholder="输入签名">
+<label>Draft Certificate:</label>
+<input type="text" id="certInput" placeholder="输入证书内容">
+<button id="submitBtn">Submit</button>
+</div>
+<div id="display-area">
+<h3>Doctor (已加入成员)</h3>
+<div id="recordsList">正在加载实时数据...</div>
+</div>
+<!-- 引入 Firebase SDK (使用模块化版本) -->
+<script type="module">
+import { initializeApp } from "www.gstatic.com";
+import { getDatabase, ref, push, onValue } from "www.gstatic.com";
+const firebaseConfig = {
+apiKey: "AIzaSyDzf_IRIDZl2_hukHAEPeLCnTcDhXuNzI4",
+authDomain: "test-c8f5b.firebaseapp.com",
+databaseURL: "https://test-c8f5b-default-rtdb.asia-southeast1.firebasedatabase.app",
+projectId: "test-c8f5b",
+storageBucket: "test-c8f5b.firebasestorage.app",
+messagingSenderId: "383603417544",
+appId: "1:383603417544:web:7d351f659af0ecf046e0fd",
+measurementId: "G-QNE09HSHJJ"
+};
+// 初始化 Firebase
+const app = initializeApp(firebaseConfig);
+const db = getDatabase(app);
+const doctorsRef = ref(db, 'doctors');
+// 提交数据
+document.getElementById('submitBtn').addEventListener('click', () => {
+const name = document.getElementById('nameInput').value;
+const sign = document.getElementById('signInput').value;
+const cert = document.getElementById('certInput').value;
+if (name && sign && cert) {
+push(doctorsRef, {
+name: name,
+sign: sign,
+cert: cert,
+timestamp: Date.now()
+}).then(() => {
+alert("申请成功！");
+document.getElementById('nameInput').value = '';
+document.getElementById('signInput').value = '';
+document.getElementById('certInput').value = '';
+});
+} else {
+alert("请填写所有字段");
+}
+});
+// 实时监听并显示数据 (刷新不消失，且多设备同步)
+onValue(doctorsRef, (snapshot) => {
+const recordsList = document.getElementById('recordsList');
+recordsList.innerHTML = '';
+const data = snapshot.val();
+if (data) {
+// 将数据显示为最新的在最上面
+Object.values(data).reverse().forEach(item => {
+const div = document.createElement('div');
+div.className = 'record';
+div.innerHTML = &lt;strong&gt;Name:&lt;/strong&gt; ${item.name}&lt;br&gt; &lt;strong&gt;Sign:&lt;/strong&gt; ${item.sign}&lt;br&gt; &lt;strong&gt;Certificate:&lt;/strong&gt; ${item.cert};
+recordsList.appendChild(div);
+});
+} else {
+recordsList.innerHTML = '暂无记录';
+}
+});
+</script>
+</body>
+</html>
